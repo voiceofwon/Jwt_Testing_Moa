@@ -39,6 +39,7 @@ public class MemberController {
     @PostMapping("/mytag")
     public String myTag(@AuthenticationPrincipal UserDetails userDetails){
         String address = userDetails.getUsername();
+
         return address;
     }
 }

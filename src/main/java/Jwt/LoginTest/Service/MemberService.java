@@ -3,8 +3,10 @@ package Jwt.LoginTest.Service;
 
 import Jwt.LoginTest.DTO.TokenInfo;
 import Jwt.LoginTest.Entity.Member;
+import Jwt.LoginTest.Entity.Tag;
 import Jwt.LoginTest.Jwt.JwtTokenProvider;
 import Jwt.LoginTest.Repository.MemberRepository;
+import Jwt.LoginTest.Repository.TagRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,6 +24,8 @@ import java.util.Optional;
 public class MemberService {
     @Autowired
     MemberRepository memberRepository;
+    @Autowired
+    TagRepository tagRepository;
 
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
@@ -37,6 +41,7 @@ public class MemberService {
 
         return tokenInfo;
     }
+
     public Member join(Member member){
         Optional<Member> findMembers = memberRepository.findByAddress(member.getAddress());
         if(!findMembers.isEmpty()){

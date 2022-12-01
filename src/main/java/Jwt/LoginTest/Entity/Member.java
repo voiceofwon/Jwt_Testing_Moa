@@ -33,7 +33,7 @@ public class Member implements UserDetails {
     private String address;
 
     @OneToMany(mappedBy = "member")
-    private List<Tag> tags = new ArrayList<>();
+    private List<MemberTag> membertags = new ArrayList<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Builder.Default
