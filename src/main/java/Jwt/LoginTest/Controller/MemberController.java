@@ -3,8 +3,10 @@ package Jwt.LoginTest.Controller;
 import Jwt.LoginTest.DTO.MemberLoginRequestDto;
 import Jwt.LoginTest.DTO.TokenInfo;
 import Jwt.LoginTest.Entity.Member;
+import Jwt.LoginTest.Entity.Tag;
 import Jwt.LoginTest.Service.CustomUserDetailsService;
 import Jwt.LoginTest.Service.MemberService;
+import Jwt.LoginTest.Service.TagService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Slf4j
 @RequiredArgsConstructor
 @RestController
@@ -20,6 +24,9 @@ import org.springframework.web.bind.annotation.*;
 public class MemberController {
     @Autowired
     MemberService memberService;
+
+    @Autowired
+    TagService tagService;
 
     private final CustomUserDetailsService customUserDetailsService;
 
@@ -37,9 +44,11 @@ public class MemberController {
     }
 
     @PostMapping("/mytag")
-    public String myTag(@AuthenticationPrincipal UserDetails userDetails){
+    public List<Tag> myTag(@AuthenticationPrincipal UserDetails userDetails){
         String address = userDetails.getUsername();
+        List<Tag> userTags = tagService.findTags(address);
 
-        return address;
+        return userTags;
     }
+
 }
