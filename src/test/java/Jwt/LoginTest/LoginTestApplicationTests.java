@@ -1,64 +1,106 @@
 package Jwt.LoginTest;
 
+
+import Jwt.LoginTest.DTO.MemberLoginRequestDto;
+import Jwt.LoginTest.DTO.TokenInfo;
 import Jwt.LoginTest.Entity.Member;
-import Jwt.LoginTest.Entity.MemberTag;
-import Jwt.LoginTest.Entity.Tag;
+import Jwt.LoginTest.Jwt.JwtAuthenticationFilter;
+import Jwt.LoginTest.Jwt.JwtTokenProvider;
 import Jwt.LoginTest.Repository.MemberRepository;
-import Jwt.LoginTest.Repository.MembertagRepository;
-import Jwt.LoginTest.Repository.TagRepository;
 import Jwt.LoginTest.Service.MemberService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.Rollback;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.test.web.servlet.MockMvc;
 
-import javax.transaction.Transactional;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import static org.junit.Assert.assertEquals;
-
-@ExtendWith(SpringExtension.class)
 @SpringBootTest
+@AutoConfigureMockMvc
 class LoginTestApplicationTests {
 	@Autowired
-	private MemberRepository memberRepository;
-
-	@Autowired
-	private TagRepository tagRepository;
-
-	@Autowired
-	private MembertagRepository membertagRepository;
-
-	@Autowired
 	private MemberService memberService;
+	@Autowired
+	MockMvc mvc;
+	@Autowired
+	private ObjectMapper objectMapper;
+
+	@Autowired
+	JwtTokenProvider jwtTokenProvider;
+
+
+
+	private final String address = "voiceofwon@naver.com";
+	private final String password = "1102";
 
 	@Test
-	@Transactional
-	@Rollback(false)
-	void testMember() {
+	void TokenGeneration() throws Exception {
+		//given
+		MemberLoginRequestDto testDTO = new MemberLoginRequestDto();
+		testDTO.setAddress(address);
+		testDTO.setPassword(password);
+
+		//when
+		TokenInfo tokenInfo = memberService.login(testDTO.getAddress(), testDTO.getPassword());
+
+		String granttype = tokenInfo.getGrantType();
+		String accessToken = tokenInfo.getAccessToken();
+
+		Boolean validateToken = jwtTokenProvider.validateToken(accessToken);
 
 
-		Member member = new Member();
-		member.setName("test1");
-		member.setAddress("voiceofwon@naver.com");
-		member.setS_id(202126978);
-		member.setPassword("1102");
+		//then
+		Assertions.assertEquals(validateToken,Boolean.TRUE);
+		Assertions.assertEquals(granttype,"Bearer");
 
-		Tag tag = new Tag();
-		tag.setTname("학사");
-
-		tagRepository.save(tag);
-		memberRepository.save(member);
-
-		MemberTag memberTag = new MemberTag();
-		memberTag.setMember(member);
-		memberTag.setTag(tag);
-
-		membertagRepository.save(memberTag);
-		assertEquals(member.getName(),"test1");
 	}
 
+	@Test
+	public void login_Controller_Test() throws Exception {
+		//given
+		MemberLoginRequestDto testDTO = new MemberLoginRequestDto();
+		testDTO.setAddress(address);
+		testDTO.setPassword(password);
+		//when
+		String content = objectMapper.writeValueAsString(testDTO);
+		//then
+		mvc.perform(post("/members/login")
+				.content(content)
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andDo(print());
 
+	}
+
+	@Test
+	public void access_Test() throws Exception {
+		//given
+		MemberLoginRequestDto testDTO = new MemberLoginRequestDto();
+		testDTO.setAddress(address);
+		testDTO.setPassword(password);
+
+		TokenInfo tokenInfo = memberService.login(testDTO.getAddress(), testDTO.getPassword());
+
+		String granttype = tokenInfo.getGrantType();
+		String accessToken = tokenInfo.getAccessToken();
+
+		mvc.perform(post("/members/test")
+				.header(HttpHeaders.AUTHORIZATION,granttype + " " + accessToken))
+				.andExpect(status().isOk())
+				.andDo(print());
+
+
+
+	}
 
 }

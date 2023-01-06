@@ -22,4 +22,5 @@ public class MemberTag {
     private Tag tag;
 
     private int tagAmount;
+
 }
